@@ -1,0 +1,68 @@
+{
+  "Version": 1,
+  "Id": "44c5638abae2efc022ec868babf10f7e",
+  "Title": "Around the bumper",
+  "Brief": "Deliver to HOME on the right. Coral pushes you away from its core and around the small bumper. Aim beside the field, not into a core.",
+  "StarScore": 100,
+  "Pegs": [
+    {
+      "Id": 0,
+      "Home": {
+        "X": 320,
+        "Y": 420
+      },
+      "Position": {
+        "X": 320,
+        "Y": 420
+      },
+      "Previous": {
+        "X": 320,
+        "Y": 420
+      },
+      "Kind": "Repulsor",
+      "Radius": 19,
+      "Field": 190,
+      "Strength": 1400,
+      "OrbitRadius": 42,
+      "OrbitSpeed": 0.9,
+      "Phase": 0
+    },
+    {
+      "Id": 1,
+      "Home": {
+        "X": 412,
+        "Y": 415
+      },
+      "Position": {
+        "X": 412,
+        "Y": 415
+      },
+      "Previous": {
+        "X": 412,
+        "Y": 415
+      },
+      "Kind": "Neutral",
+      "Radius": 19,
+      "Field": 145,
+      "Strength": 500,
+      "OrbitRadius": 42,
+      "OrbitSpeed": 0.9,
+      "Phase": 0
+    }
+  ],
+  "Home": {
+    "Position": {
+      "X": 475,
+      "Y": 250
+    },
+    "Radius": 32
+  },
+  "Portals": [],
+  "RequiredFields": [],
+  "RequiredGrazes": [],
+  "FinishGrazes": [],
+  "RequiredGates": [],
+  "Banks": 0,
+  "BankAfterStep": null,
+  "Clear": null
+}

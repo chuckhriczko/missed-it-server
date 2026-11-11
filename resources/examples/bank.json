@@ -1,0 +1,46 @@
+{
+  "Version": 1,
+  "Id": "14978b6b89104dbf8bc14816a5ebd635",
+  "Title": "Spring bank",
+  "Brief": "Bounce off the spring-blue peg into HOME on the right. Touch BOUNCE pegs safely; other solid cores end the shot. Aim near straight up to hit its right shoulder.",
+  "StarScore": 100,
+  "Pegs": [
+    {
+      "Id": 0,
+      "Home": {
+        "X": 292.5,
+        "Y": 420
+      },
+      "Position": {
+        "X": 292.5,
+        "Y": 420
+      },
+      "Previous": {
+        "X": 292.5,
+        "Y": 420
+      },
+      "Kind": "Bumper",
+      "Radius": 60,
+      "Field": 145,
+      "Strength": 500,
+      "OrbitRadius": 42,
+      "OrbitSpeed": 0.9,
+      "Phase": 0
+    }
+  ],
+  "Home": {
+    "Position": {
+      "X": 520,
+      "Y": 600
+    },
+    "Radius": 75
+  },
+  "Portals": [],
+  "RequiredFields": [],
+  "RequiredGrazes": [],
+  "FinishGrazes": [],
+  "RequiredGates": [],
+  "Banks": 0,
+  "BankAfterStep": null,
+  "Clear": null
+}

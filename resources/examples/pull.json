@@ -1,0 +1,46 @@
+{
+  "Version": 1,
+  "Id": "188e3d1d7f511b387e7e65e604b08a58",
+  "Title": "Borrow the bend",
+  "Brief": "Deliver to HOME above-right. The teal core blocks the direct line; skim its left side so its pull curves your shot around it.",
+  "StarScore": 100,
+  "Pegs": [
+    {
+      "Id": 0,
+      "Home": {
+        "X": 385,
+        "Y": 420
+      },
+      "Position": {
+        "X": 385,
+        "Y": 420
+      },
+      "Previous": {
+        "X": 385,
+        "Y": 420
+      },
+      "Kind": "Gravity",
+      "Radius": 19,
+      "Field": 200,
+      "Strength": 900,
+      "OrbitRadius": 42,
+      "OrbitSpeed": 0.9,
+      "Phase": 0
+    }
+  ],
+  "Home": {
+    "Position": {
+      "X": 450,
+      "Y": 180
+    },
+    "Radius": 32
+  },
+  "Portals": [],
+  "RequiredFields": [],
+  "RequiredGrazes": [],
+  "FinishGrazes": [],
+  "RequiredGates": [],
+  "Banks": 0,
+  "BankAfterStep": null,
+  "Clear": null
+}
