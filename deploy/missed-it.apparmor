@@ -1,0 +1,10 @@
+# Included inside the existing php-fpm profile; scoped to this app.
+/run/php/missed-it.sock rwlk,
+/var/www/sites/missed-it/server/ r,
+/var/www/sites/missed-it/server/** r,
+/var/www/sites/missed-it/server/storage/ rw,
+/var/www/sites/missed-it/server/storage/** rwk,
+/var/www/sites/missed-it/server/bootstrap/cache/ rw,
+/var/www/sites/missed-it/server/bootstrap/cache/** rwk,
+/var/www/sites/missed-it/server/database/ rw,
+/var/www/sites/missed-it/server/database/** rwk,
