@@ -6,7 +6,7 @@ A Laravel 13 community puzzle library for **Pip and the Last Sunseed / Missed It
 
 - Public browsing, creator/title/objective search, difficulty and mechanic filters, newest/oldest/most-downloaded sorting, pagination.
 - Registration, sign-in, remembered sessions, a personal collection, and owner-only puzzle removal.
-- Versioned game API with Sanctum bearer tokens, native-client login, uploads, browsing, downloads, and per-device token revocation.
+- Versioned game API with Sanctum bearer tokens, native-client login, name-only players for sharing from the game, uploads, browsing, downloads, and per-device token revocation.
 - Paste JSON or upload a file (100,000-byte limit). Stable UUID share pages, static SVG board previews, exact JSON downloads, clipboard sharing, download counts.
 - Structural intake checks, foreign-key checks for required mechanisms, escaped user content, CSRF protection, login/registration/upload/download throttles.
 - SQLite database with Laravel sessions and cache; no frontend build, background worker, or additional database server needed.
@@ -35,8 +35,8 @@ See [docs/API.md](docs/API.md) for the full contract, authentication, request/re
 
 ## Sharing with the game
 
-1. In the game, open Create a puzzle → Puzzles → **Share online**. The game copies the puzzle and opens this site's Share a puzzle page.
-2. Sign in and paste it (or upload a JSON file).
+1. In the game, open Create a puzzle → Puzzles → **Share online**, type a name and pick a difficulty. The game uploads the puzzle with no website account: the first share creates a name-only player (`POST /api/v1/players`), and the game remembers its name, token and difficulty for next time. See [docs/API.md](docs/API.md).
+2. Website accounts can still share by pasting JSON or uploading a file on the Share a puzzle page.
 3. Other players open Create a puzzle → **Puzzle Garden** in the game, which lists puzzles through the public game API (`GET /api/v1/puzzles`) and downloads from `GET /api/v1/puzzles/{id}/download`; see [docs/API.md](docs/API.md). Tapping one downloads it, replays its recorded clear, and saves a local copy.
 4. Copying JSON by hand still works: Puzzles → Share JSON, then Import JSON → Import copy.
 

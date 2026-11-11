@@ -44,7 +44,9 @@ All paths below are relative to `/api/v1`. `{id}` is the UUID `data.id` returned
 | Method | Path | Authentication | Result |
 | --- | --- | --- | --- |
 | POST | `/tokens` | Email/password in body | New bearer token |
+| POST | `/players` | Public, `name` in body | New name-only player and bearer token |
 | GET | `/me` | Bearer | Current creator name |
+| PATCH | `/me` | Bearer, `puzzles:write` ability | Change the creator name shown on all of this account's puzzles |
 | DELETE | `/tokens/current` | Bearer | Revoke this device token |
 | GET | `/puzzles` | Public | Paginated puzzle metadata |
 | GET | `/puzzles/{id}` | Public | Metadata plus original `puzzle_json` string |
@@ -52,6 +54,16 @@ All paths below are relative to `/api/v1`. `{id}` is the UUID `data.id` returned
 | GET | `/me/puzzles` | Bearer | Current user's paginated puzzles |
 | POST | `/puzzles` | Bearer, `puzzles:write` ability | Publish puzzle; return metadata/share URL |
 | DELETE | `/puzzles/{id}` | Bearer, `puzzles:write` ability | Remove an owned puzzle (`204`) |
+
+## Share from the game without an account
+
+The game's **Share online** uses name-only players, so players never need a website account:
+
+1. The first share sends `POST /api/v1/players` with `{"name": "Fern"}` (1–40 characters, not blank). The reply is `201` with `token_type`, `token`, `expires_at` and `name`. The game keeps the token and the name on the device.
+2. When the player shares under a different name, the game sends `PATCH /api/v1/me` with the new name. The name changes on all of that player's puzzles.
+3. The game uploads with `POST /api/v1/puzzles` as below. If the token is rejected (`401`, for example after it expires in 90 days), the game creates a new player once and retries.
+
+A player is an ordinary user with a placeholder email (`player-<uuid>@players.missedit.invalid`) and a random password, so it can never sign in on the website. New players are limited to 3 a minute and 10 a day per IP address.
 
 ## Upload from the game
 
@@ -165,7 +177,7 @@ API errors are JSON even if the client omits the `Accept` header:
 - `429`: rate limit reached; wait for the `Retry-After` header before retrying.
 - `413`: web-server/PHP request body limit exceeded; the upstream's error body may be HTML.
 
-Token login allows 5 attempts/minute per IP. Public API browsing/details/downloads share a 60/minute IP limit. Authenticated operations share a 60/minute per-user limit, with uploads capped at 10/minute per user across web and API. Website token creation allows 5/minute per user. Upload retry deduplication applies to the same account and exact file bytes, not arbitrary client idempotency keys.
+Token login allows 5 attempts/minute per IP. Public API browsing/details/downloads share a 60/minute IP limit. Authenticated operations share a 60/minute per-user limit, with uploads capped at 10/minute per user and 30/hour per IP across web and API. Name-only players allow 3/minute and 10/day per IP. Website token creation allows 5/minute per user. Upload retry deduplication applies to the same account and exact file bytes, not arbitrary client idempotency keys.
 
 ## Deployment
 
