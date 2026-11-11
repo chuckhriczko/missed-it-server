@@ -28,10 +28,21 @@ For optional starting content, `php artisan garden:examples` adds three clearly 
 
 ## Sharing with the game
 
-1. In the game, open Puzzle Studio → Library → Share JSON.
-2. On the website, sign in and select Share a puzzle; paste the clipboard or upload a JSON file.
-3. Send the puzzle page's share link. Recipients copy its JSON, or download and copy the file contents.
-4. In the game, choose Puzzle Studio → Library → Import JSON → Import copy.
+1. In the game, open Create a puzzle → Puzzles → **Share online**. The game copies the puzzle and opens this site's Share a puzzle page.
+2. Sign in and paste it (or upload a JSON file).
+3. Other players open Create a puzzle → **Puzzle Garden** in the game, which lists puzzles through the API below. Tapping one downloads it, replays its recorded clear, and saves a local copy.
+4. Copying JSON by hand still works: Puzzles → Share JSON, then Import JSON → Import copy.
+
+## Game API (read-only)
+
+The game only reads. Sharing stays on the website, behind sign-in. Both routes are limited to 60 requests a minute per client.
+
+| Route | Returns |
+|---|---|
+| `GET /api/v1/puzzles` | `{puzzles: [{id, title, brief, creator, difficulty, mechanics, downloads, hasReplay, shared}], page, pages, total}`, 20 per page. Optional `q`, `difficulty` (`gentle`/`tricky`/`expert`), `mechanic`, `sort` (`newest`/`popular`/`oldest`), `page`. Bad values return 422 JSON. |
+| `GET /api/v1/puzzles/{id}` | The submitted document byte for byte (`application/json`). Counts a download. Unknown ids return 404 JSON. |
+
+`id` is the puzzle's share-page UUID. Summaries never include documents or account details beyond the creator's display name. Tests: `tests/Feature/GardenApiTest.php`.
 
 The download retains the submitted text byte for byte, including clear replay data and its board hash. The server checks supported version 1 document structure; it does **not** run the C# physics, establish solvability, check every geometric constraint, or certify replays. The game validates geometry and replays on import. Difficulty is self-reported. Old offline Room Workshop files and campaign bundles are different formats. Future Puzzle Studio schema versions need corresponding intake/preview updates. Moving pieces are shown at their home position, and boss/gift effects are not rendered in previews.
 

@@ -16,23 +16,11 @@ class PuzzleController extends Controller {
             'sort' => ['nullable', Rule::in(['newest', 'popular', 'oldest'])],
             'mine' => ['nullable', 'in:1'],
         ]);
-        $query = Puzzle::with('user');
-        if ($q = $filters['q'] ?? null) {
-            $query->where(fn ($query) => $query->where('title', 'like', "%{$q}%")
-                ->orWhere('brief', 'like', "%{$q}%")
-                ->orWhereHas('user', fn ($user) => $user->where('name', 'like', "%{$q}%")));
-        }
-        if ($filters['difficulty'] ?? null) $query->where('difficulty', $filters['difficulty']);
-        if ($filters['mechanic'] ?? null) $query->whereJsonContains('mechanics', $filters['mechanic']);
+        $query = Puzzle::with('user')->browse($filters);
         if ($filters['mine'] ?? null) {
             if (! $request->user()) return redirect()->guest(route('login'));
             $query->where('user_id', $request->user()->id);
         }
-        match ($filters['sort'] ?? 'newest') {
-            'popular' => $query->orderByDesc('downloads')->latest('id'),
-            'oldest' => $query->oldest('id'),
-            default => $query->latest('id'),
-        };
         return view('puzzles.index', ['puzzles' => $query->paginate(12)->withQueryString(), 'total' => Puzzle::count(), 'mechanics' => self::MECHANICS]);
     }
     public function create() { return view('puzzles.create'); }
