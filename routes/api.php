@@ -1,8 +1,22 @@
 <?php
-use App\Http\Controllers\Api\GardenController;
+use App\Http\Controllers\Api\PuzzleController;
+use App\Http\Controllers\Api\TokenController;
+use App\Http\Controllers\PuzzleController as WebPuzzleController;
 use Illuminate\Support\Facades\Route;
-// Read-only endpoints for the game's Puzzle Garden browser. Sharing a puzzle stays on the website, behind sign-in.
-Route::prefix('v1')->middleware('throttle:60,1')->group(function () {
-    Route::get('/puzzles', [GardenController::class, 'index'])->name('api.puzzles.index');
-    Route::get('/puzzles/{puzzle}', [GardenController::class, 'show'])->name('api.puzzles.show');
+use Laravel\Sanctum\Http\Middleware\CheckAbilities;
+
+Route::prefix('v1')->name('api.')->group(function () {
+    Route::post('/tokens', [TokenController::class, 'store'])->middleware('throttle:api-login')->name('tokens.store');
+    Route::middleware('throttle:api-public')->group(function () {
+        Route::get('/puzzles', [PuzzleController::class, 'index'])->name('puzzles.index');
+        Route::get('/puzzles/{puzzle}', [PuzzleController::class, 'show'])->name('puzzles.show');
+        Route::get('/puzzles/{puzzle}/download', [WebPuzzleController::class, 'download'])->name('puzzles.download');
+    });
+    Route::middleware(['auth:sanctum', 'throttle:api-auth'])->group(function () {
+        Route::get('/me', [TokenController::class, 'me'])->name('me');
+        Route::get('/me/puzzles', [PuzzleController::class, 'index'])->name('me.puzzles');
+        Route::delete('/tokens/current', [TokenController::class, 'destroy'])->name('tokens.destroy');
+        Route::post('/puzzles', [PuzzleController::class, 'store'])->middleware([CheckAbilities::class.':puzzles:write', 'throttle:puzzle-uploads'])->name('puzzles.store');
+        Route::delete('/puzzles/{puzzle}', [PuzzleController::class, 'destroy'])->middleware(CheckAbilities::class.':puzzles:write')->name('puzzles.destroy');
+    });
 });

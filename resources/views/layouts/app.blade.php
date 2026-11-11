@@ -16,6 +16,7 @@
         <a href="{{ route('guide') }}">How it works</a>
         @auth
             <a href="{{ route('puzzles.index', ['mine'=>1]) }}">My puzzles</a>
+            <a href="{{ route('tokens.index') }}">Game API</a>
             <form method="post" action="{{ route('logout') }}">@csrf<button class="text-button" type="submit">Log out</button></form>
         @else
             <a href="{{ route('login') }}">Log in</a>
