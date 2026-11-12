@@ -31,6 +31,11 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('player-create', fn (Request $r) => self::noted([Limit::perMinute(3)->by('m:'.$r->ip()), Limit::perDay(10)->by('d:'.$r->ip())], 'New players rate-limited'));
         // Game error reports, forwarded to Logalyzer (/api/v1/reports).
         RateLimiter::for('game-reports', fn (Request $r) => self::noted([Limit::perMinute(10)->by('m:'.$r->ip()), Limit::perDay(200)->by('d:'.$r->ip())], 'Game error reports rate-limited'));
+        // A clear counts once per address per puzzle a day, and at most 60 clears an hour per address.
+        RateLimiter::for('puzzle-clears', function (Request $r) {
+            $puzzle = $r->route('puzzle');
+            return self::noted([Limit::perDay(1)->by('c:'.$r->ip().':'.(is_object($puzzle) ? $puzzle->slug : (string) $puzzle)), Limit::perHour(60)->by('h:'.$r->ip())], 'Puzzle clears rate-limited');
+        });
         RateLimiter::for('token-create', fn (Request $r) => Limit::perMinute(5)->by($r->user()->id));
     }
 

@@ -13,7 +13,7 @@ class PuzzleCatalog
             'q' => ['nullable', 'string', 'max:100'],
             'difficulty' => ['nullable', Rule::in(['gentle', 'tricky', 'expert'])],
             'mechanic' => ['nullable', Rule::in(self::MECHANICS)],
-            'sort' => ['nullable', Rule::in(['newest', 'popular', 'oldest'])],
+            'sort' => ['nullable', Rule::in(['newest', 'popular', 'oldest', 'cleared'])],
         ];
     }
     public function query(array $filters, ?User $owner = null): Builder
@@ -29,6 +29,7 @@ class PuzzleCatalog
         if ($filters['mechanic'] ?? null) $query->whereJsonContains('mechanics', $filters['mechanic']);
         match ($filters['sort'] ?? 'newest') {
             'popular' => $query->orderByDesc('downloads')->latest('id'),
+            'cleared' => $query->orderByDesc('clears')->latest('id'),
             'oldest' => $query->oldest('id'),
             default => $query->latest('id'),
         };

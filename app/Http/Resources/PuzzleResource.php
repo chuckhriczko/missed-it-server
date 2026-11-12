@@ -10,7 +10,7 @@ class PuzzleResource extends JsonResource
             'id' => $this->slug, 'title' => $this->title, 'brief' => $this->brief,
             'notes' => $this->notes, 'difficulty' => $this->difficulty,
             'mechanics' => $this->mechanics, 'has_replay' => $this->has_replay,
-            'downloads' => $this->downloads, 'sha256' => $this->checksum,
+            'downloads' => $this->downloads, 'clears' => (int) $this->clears, 'sha256' => $this->checksum,
             'creator' => ['name' => $this->user->name],
             'created_at' => $this->created_at->toIso8601String(),
             'share_url' => route('puzzles.show', $this->resource),

@@ -15,6 +15,7 @@ Route::prefix('v1')->name('api.')->group(function () {
         Route::get('/puzzles', [PuzzleController::class, 'index'])->name('puzzles.index');
         Route::get('/puzzles/{puzzle}', [PuzzleController::class, 'show'])->name('puzzles.show');
         Route::get('/puzzles/{puzzle}/download', [WebPuzzleController::class, 'download'])->name('puzzles.download');
+        Route::post('/puzzles/{puzzle}/clears', [PuzzleController::class, 'clear'])->middleware('throttle:puzzle-clears')->name('puzzles.clears');
     });
     Route::middleware(['auth:sanctum', 'throttle:api-auth'])->group(function () {
         Route::get('/me', [TokenController::class, 'me'])->name('me');

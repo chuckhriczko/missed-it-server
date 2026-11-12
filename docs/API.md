@@ -51,6 +51,7 @@ All paths below are relative to `/api/v1`. `{id}` is the UUID `data.id` returned
 | GET | `/puzzles` | Public | Paginated puzzle metadata |
 | GET | `/puzzles/{id}` | Public | Metadata plus original `puzzle_json` string |
 | GET | `/puzzles/{id}/download` | Public | Original JSON file, increments downloads |
+| POST | `/puzzles/{id}/clears` | Public | A player landed HOME on a downloaded copy; increments `clears` (once per address per puzzle a day) |
 | GET | `/me/puzzles` | Bearer | Current user's paginated puzzles |
 | POST | `/puzzles` | Bearer, `puzzles:write` ability | Publish puzzle; return metadata/share URL |
 | DELETE | `/puzzles/{id}` | Bearer, `puzzles:write` ability | Remove an owned puzzle (`204`) |
@@ -120,6 +121,7 @@ On creation, the API returns `201`, a `Location` header pointing to the metadata
     "mechanics": ["Gravity"],
     "has_replay": false,
     "downloads": 0,
+    "clears": 0,
     "sha256": "SHA256_OF_ORIGINAL_EXPORT",
     "creator": {"name": "Player"},
     "created_at": "2026-11-11T18:00:00+00:00",
@@ -181,11 +183,13 @@ Pass `Document.Serialize()` as `exportedJson`. Connect this method to the game's
 | `q` | Title, objective, or creator search, at most 100 characters |
 | `difficulty` | `gentle`, `tricky`, `expert` |
 | `mechanic` | `Gravity`, `Repulsor`, `Accelerator`, `Orbiter`, `Capture`, `Bumper`, `Portals`, `Surfaces`, `Rivers`, `Blossoms` |
-| `sort` | `newest` (default), `oldest`, `popular` (most downloads) |
+| `sort` | `newest` (default), `oldest`, `popular` (most downloads), `cleared` (most clears) |
 | `per_page` | 1–50 (default 24) |
 | `page` | Positive page number |
 
 Responses contain `data`, pagination `links`, and `meta` (`current_page`, `last_page`, `per_page`, `total`, etc.). Listings omit the large puzzle export; fetch its detail or download URL when selected. Only the download endpoint increments the download count.
+
+`POST /puzzles/{id}/clears` takes no body and returns `{"data":{"id":"…","clears":5}}`. The game sends it once when a player lands HOME on an unchanged downloaded copy. Each address counts once per puzzle a day (a repeat gets `429`), and at most 60 clears an hour.
 
 ## Errors and limits
 

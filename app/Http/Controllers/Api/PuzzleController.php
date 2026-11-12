@@ -13,7 +13,7 @@ class PuzzleController extends Controller
     {
         $filters = $request->validate($catalog::rules() + ['per_page' => ['nullable', 'integer', 'between:1,50'], 'page' => ['nullable', 'integer', 'min:1']]);
         $owner = $request->routeIs('api.me.puzzles') ? $request->user() : null;
-        $query = $catalog->query($filters, $owner)->select(['puzzles.id', 'slug', 'user_id', 'title', 'brief', 'notes', 'difficulty', 'mechanics', 'has_replay', 'downloads', 'checksum', 'created_at']);
+        $query = $catalog->query($filters, $owner)->select(['puzzles.id', 'slug', 'user_id', 'title', 'brief', 'notes', 'difficulty', 'mechanics', 'has_replay', 'downloads', 'clears', 'checksum', 'created_at']);
         return PuzzleResource::collection($query->paginate($filters['per_page'] ?? 24)->withQueryString());
     }
     public function store(PuzzleUploadRequest $request, PublishPuzzle $publisher)
@@ -22,6 +22,12 @@ class PuzzleController extends Controller
         return (new PuzzleResource($puzzle->load('user')))->additional(['created' => $puzzle->wasRecentlyCreated])
             ->response()->setStatusCode($puzzle->wasRecentlyCreated ? 201 : 200)
             ->header('Location', route('api.puzzles.show', $puzzle));
+    }
+    // A player landed HOME on a downloaded copy. Each address counts once per puzzle a day (see the puzzle-clears limiter).
+    public function clear(Puzzle $puzzle)
+    {
+        $puzzle->increment('clears');
+        return response()->json(['data' => ['id' => $puzzle->slug, 'clears' => $puzzle->clears]]);
     }
     public function show(Puzzle $puzzle) { return new PuzzleResource($puzzle->load('user')); }
     public function destroy(Request $request, Puzzle $puzzle)
