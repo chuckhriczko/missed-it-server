@@ -1,0 +1,32 @@
+{
+    "name": "logalyzer/logalyzer-php",
+    "description": "Official PHP SDK for Logalyzer — structured log ingestion with Laravel integration.",
+    "type": "library",
+    "license": "MIT",
+    "keywords": ["logalyzer", "logging", "monolog", "laravel"],
+    "require": {
+        "php": "^8.1",
+        "monolog/monolog": "^3.0",
+        "guzzlehttp/guzzle": "^7.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Logalyzer\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Logalyzer\\Integrations\\Laravel\\LogalyzerServiceProvider"
+            ],
+            "aliases": {
+                "Logalyzer": "Logalyzer\\Integrations\\Laravel\\LogalyzerFacade"
+            }
+        }
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

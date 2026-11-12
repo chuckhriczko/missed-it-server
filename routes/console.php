@@ -4,6 +4,10 @@ use App\Models\User;
 use App\Services\PuzzleDocument;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Schedule;
+
+Schedule::command('garden:backup')->dailyAt('02:15')->timezone('UTC')->withoutOverlapping(120);
+Schedule::command('sanctum:prune-expired --hours=24')->dailyAt('02:45')->timezone('UTC')->withoutOverlapping();
 
 Artisan::command('garden:examples', function (PuzzleDocument $parser) {
     $author = User::firstOrCreate(['email'=>'studio-examples@missed-it.invalid'], ['name'=>'Studio examples','password'=>Str::random(64)]);

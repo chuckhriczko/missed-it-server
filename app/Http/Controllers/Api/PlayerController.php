@@ -16,6 +16,7 @@ class PlayerController extends Controller
         $data = $request->validate(self::nameRules());
         $user = User::create(['name' => trim($data['name']), 'email' => 'player-'.Str::uuid().'@'.self::EMAIL_DOMAIN, 'password' => Str::random(64)]);
         $token = $tokens->issue($user, 'Puzzle Studio');
+        \Illuminate\Support\Facades\Log::info('Player created', ['player' => $user->name]);
         return response()->json(['token_type' => 'Bearer', 'token' => $token->plainTextToken, 'expires_at' => $token->accessToken->expires_at->toIso8601String(), 'name' => $user->name], 201)
             ->header('Cache-Control', 'no-store');
     }

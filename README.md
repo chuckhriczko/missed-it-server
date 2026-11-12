@@ -33,6 +33,26 @@ The game can upload directly to `POST /api/v1/puzzles` with a Sanctum bearer tok
 
 See [docs/API.md](docs/API.md) for the full contract, authentication, request/response examples, errors, limits, and a C# upload example. Deploy the token-table migration with `php artisan migrate --force` and refresh routes with `php artisan optimize` after installing dependencies. The API reuses the same validator and publisher as the website.
 
+## Logalyzer
+
+The site can send its logs, and the game's error reports, to [Logalyzer](https://logalyzer.thedevelopingweb.com). Nothing is sent until a URL and token are set.
+
+1. In Logalyzer, create an API token (optionally tied to a project).
+2. Add to `.env` on the server (never commit it):
+   ```env
+   LOG_STACK=daily,logalyzer
+   LOGALYZER_URL=https://logalyzer.thedevelopingweb.com
+   LOGALYZER_TOKEN=<the token>
+   # Optional: LOGALYZER_PROJECT_ID=<id>, LOGALYZER_LEVEL=info, LOGALYZER_ENVIRONMENT=production
+   ```
+3. Run `php artisan optimize` so the cached config picks it up.
+
+What arrives:
+- **"Missed It · Puzzle Garden server"**: errors with their file, line and stack trace, plus "Player created", "Puzzle shared", "Puzzle refused" (with the reason), "Puzzle removed" and rate-limit hits. Entries are sent in one batch at the end of each request. Visitors' IP addresses are not included.
+- **"Missed It · Game"**: error reports from players' games, which post them to `POST /api/v1/reports` (see [docs/API.md](docs/API.md)). The server forwards them after responding, so the token never leaves the server. A Logalyzer token can read and delete logs, so it must not go inside the game.
+
+If Logalyzer is down or the token is wrong, nothing breaks: entries are dropped and the site carries on.
+
 ## Sharing with the game
 
 1. In the game, open Create a puzzle → Puzzles → **Share online**, type a name and pick a difficulty. The game uploads the puzzle with no website account: the first share creates a name-only player (`POST /api/v1/players`), and the game remembers its name, token and difficulty for next time. See [docs/API.md](docs/API.md).
@@ -72,6 +92,25 @@ This runs the repaired vhost installer, backs up the Nginx site, uses the existi
 Re-running `install-vhost.sh` preserves an existing TLS configuration. To test renewal after initial setup, run `sudo certbot renew --cert-name missedit.chain-reaction-game.com --dry-run` (check `sudo certbot certificates` if Certbot allocated a different certificate name).
 
 Keep `APP_ENV=production` and `APP_DEBUG=false`. Preserve `.env` and back up `database/database.sqlite` using SQLite's backup mechanism (or stop writes before copying). Runtime writes belong to `storage/`, `bootstrap/cache/`, and the database directory. Static public files must remain readable by Nginx. There is no email verification/password recovery or moderation console in this initial version; the site never sends email, and email addresses are not displayed publicly. Operators can remove abusive uploads via Laravel Tinker or the database.
+
+### Routine application deployment
+
+After reviewing/testing a release and checking out its code on the server, run as `chuck`, without sudo:
+
+```bash
+cd /var/www/sites/missed-it/server
+bash deploy/deploy.sh
+```
+
+The script deploys the code already present; it does not fetch or reset Git. Initial server setup and installed Composer dependencies are required. It checks prerequisites, prevents concurrent deployments, enters maintenance mode, and creates a private SQLite backup using PHP's online backup API (including committed WAL data). It then installs production dependencies from `composer.lock`, checks platform requirements, runs migrations, rebuilds configuration/event/route/view caches, reopens the app, and requires HTTP 200 from `APP_URL/up`. It requires PHP's `sqlite3` extension, Composer, curl, flock, and file-based Laravel maintenance mode. It preserves `.env` and `APP_KEY`; Nginx, TLS, and system services are managed separately.
+
+Backups are stored in `storage/app/private/deploy-backups/<UTC timestamp>-<unique ID>/database.sqlite`, outside the public directory. Each snapshot is restored to a temporary database and integrity-checked. They contain account and token data; keep them private and copy important backups off the server. Scheduled backups prune completed snapshots older than `BACKUP_KEEP_DAYS` (default 30), including deployment snapshots. A `.partial` file means backup creation did not finish successfully. No automatic database rollback is attempted.
+
+If a deployment fails after maintenance starts, fix the reported step before running the remaining install/migration/cache commands and `php artisan up`. A failed HTTP check attempts to return the site to maintenance mode. If necessary, restore compatible application code and the database backup together while writes are stopped; do not blindly reverse migrations or copy over a live SQLite database. A pre-existing maintenance state is left for the operator to resolve. This script does not provide atomic code releases: replacing code before starting it can briefly expose mixed code/dependencies. Run tests before deployment in a separate checkout; `composer test` clears application caches, and production installation removes dev dependencies.
+
+### Scheduled maintenance and logging
+
+Daily verified backups, expired-token cleanup, database-aware `/up`, daily log rotation, and an additional Logalyzer channel are included. SQLite connections use WAL and a bounded lock timeout. GitHub Actions runs tests, compilation checks, shell syntax checks, and dependency auditing. See [docs/OPERATIONS.md](docs/OPERATIONS.md) for configuration, restore checks, and the administrator command that activates cron/logrotate. Off-server backups and external uptime alerts are intentionally unconfigured.
 
 ## Verify
 

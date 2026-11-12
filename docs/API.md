@@ -54,6 +54,27 @@ All paths below are relative to `/api/v1`. `{id}` is the UUID `data.id` returned
 | GET | `/me/puzzles` | Bearer | Current user's paginated puzzles |
 | POST | `/puzzles` | Bearer, `puzzles:write` ability | Publish puzzle; return metadata/share URL |
 | DELETE | `/puzzles/{id}` | Bearer, `puzzles:write` ability | Remove an owned puzzle (`204`) |
+| POST | `/reports` | Public | Game error reports, forwarded to Logalyzer (`202`) |
+
+## Game error reports
+
+`POST /api/v1/reports` takes error reports from the game and forwards them to Logalyzer with the server's own token (see the README's Logalyzer section). Nothing is stored on this server.
+
+```json
+{
+  "environment": "production",
+  "context": {"version": "0.151.0", "platform": "Android", "os_version": "15", "device": "Pixel 7", "engine": "4.7.2-stable (official)", "screen": "1080x2400", "scene": "Level 15"},
+  "entries": [
+    {"severity": "error", "message": "NullReferenceException: ...", "source_file": "Board.cs", "line_number": 120, "count": 3, "trace": "at MissedIt.Board.Shoot() ...", "occurred_at": "2026-11-12T11:21:13Z"}
+  ]
+}
+```
+
+- `environment`: `production` or `development`.
+- `context`: only the keys shown are kept (each a short string); anything else is dropped.
+- `entries`: 1–20, each `warning`, `error` or `critical`, message up to 2,000 characters, trace up to 4,000. `count` is how many times the game saw that error.
+- The reply is `202` with `accepted` and `forwarded` (false when Logalyzer isn't configured). Bad input is `422`.
+- Limited to 10 a minute and 200 a day per IP address.
 
 ## Share from the game without an account
 

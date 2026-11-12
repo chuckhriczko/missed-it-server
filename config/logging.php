@@ -54,22 +54,29 @@ return [
 
         'stack' => [
             'driver' => 'stack',
-            'channels' => explode(',', (string) env('LOG_STACK', 'single')),
+            'channels' => explode(',', (string) env('LOG_STACK', 'daily,logalyzer')),
             'ignore_exceptions' => false,
+        ],
+
+        'logalyzer' => [
+            'driver' => 'custom',
+            'via' => App\Logging\CreateLogalyzerLogger::class,
+            'level' => env('LOGALYZER_LEVEL', 'info'),
         ],
 
         'single' => [
             'driver' => 'single',
             'path' => storage_path('logs/laravel.log'),
-            'level' => env('LOG_LEVEL', 'debug'),
+            'level' => env('LOG_LEVEL', 'info'),
             'replace_placeholders' => true,
         ],
 
         'daily' => [
             'driver' => 'daily',
             'path' => storage_path('logs/laravel.log'),
-            'level' => env('LOG_LEVEL', 'debug'),
+            'level' => env('LOG_LEVEL', 'info'),
             'max_files' => env('LOG_DAILY_DAYS', 14),
+            'permission' => 0600,
             'replace_placeholders' => true,
         ],
 

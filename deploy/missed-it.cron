@@ -1,0 +1,4 @@
+# Install as /etc/cron.d/missed-it (root-owned, mode 0644).
+SHELL=/bin/sh
+PATH=/usr/local/bin:/usr/bin:/bin
+* * * * * chuck cd /var/www/sites/missed-it/server && /usr/bin/php artisan schedule:run >> /var/www/sites/missed-it/server/storage/logs/scheduler.log 2>&1

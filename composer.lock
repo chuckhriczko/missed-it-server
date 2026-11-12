@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "575c0eae0192da3296ab92e8d749c8be",
+    "content-hash": "6516c48703a9fba6b6d11fa5c688a662",
     "packages": [
         {
             "name": "brick/math",
@@ -2094,6 +2094,50 @@
                 }
             ],
             "time": "2026-03-08T20:05:35+00:00"
+        },
+        {
+            "name": "logalyzer/logalyzer-php",
+            "version": "1.0.0",
+            "dist": {
+                "type": "path",
+                "url": "packages/logalyzer-sdk",
+                "reference": "9322257a9087688ac73a21ac927f41b9311ab0e9"
+            },
+            "require": {
+                "guzzlehttp/guzzle": "^7.0",
+                "monolog/monolog": "^3.0",
+                "php": "^8.1"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Logalyzer\\Integrations\\Laravel\\LogalyzerServiceProvider"
+                    ],
+                    "aliases": {
+                        "Logalyzer": "Logalyzer\\Integrations\\Laravel\\LogalyzerFacade"
+                    }
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Logalyzer\\": "src/"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "description": "Official PHP SDK for Logalyzer — structured log ingestion with Laravel integration.",
+            "keywords": [
+                "laravel",
+                "logalyzer",
+                "logging",
+                "monolog"
+            ],
+            "transport-options": {
+                "symlink": false,
+                "relative": true
+            }
         },
         {
             "name": "monolog/monolog",

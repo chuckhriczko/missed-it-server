@@ -15,6 +15,11 @@ class PuzzleUploadRequest extends FormRequest
             'notes' => ['nullable', 'string', 'max:2000'],
         ];
     }
+    protected function failedValidation(\Illuminate\Contracts\Validation\Validator $validator): void
+    {
+        \Illuminate\Support\Facades\Log::notice('Puzzle refused', ['creator' => $this->user()?->name, 'reason' => $validator->errors()->first()]);
+        parent::failedValidation($validator);
+    }
     public function documentText(): string
     {
         if ($this->hasFile('puzzle_file') && filled($this->validated('puzzle_json'))) {

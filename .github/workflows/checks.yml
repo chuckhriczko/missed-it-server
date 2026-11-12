@@ -1,0 +1,28 @@
+name: Server checks
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          extensions: mbstring, pdo_sqlite, sqlite3, xml, curl
+          tools: composer:v2
+          coverage: none
+      - run: composer validate --no-check-publish
+      - run: composer install --prefer-dist --no-interaction
+      - run: cp .env.example .env
+      - run: php artisan key:generate
+      - run: composer test
+      - run: php artisan config:cache && php artisan event:cache && php artisan route:cache && php artisan view:cache
+      - run: for script in deploy/*.sh; do bash -n "$script"; done
+      - run: composer audit --locked

@@ -1,5 +1,38 @@
 # Verification — 11 November 2026
 
+## Operations update — 12 November 2026
+
+- Added daily backup and expired-token schedules, host cron/logrotate templates
+  and installer, database/schema checks on `/up`, private daily logs, SQLite WAL
+  with a 5000 ms lock timeout, and GitHub Actions checks.
+- Bundled the unchanged Logalyzer SDK from the other site's `web/logalyzer-sdk`
+  as a mirrored Composer path package. Only this dependency was added to the lock
+  file; existing package versions were preserved.
+- Production `.env` now selects daily logs plus Logalyzer, reusing the host's
+  existing Logalyzer connection/project with the distinct **Puzzle Garden —
+  Server** group. The app key was preserved. Local daily log permissions are 0600.
+- Isolated full suite: **36 tests, 275 assertions passed**, including health
+  failure privacy, token cleanup, backup/WAL preservation and retention, remote
+  logging failure containment, and concurrent SQLite readers/writers. The health
+  tests were rerun successfully after refining configured connection handling.
+- A real production snapshot was created and restored into a temporary database
+  for integrity verification. Backup refusal while deployment holds the lock was
+  checked separately in the isolated workspace.
+- Production Laravel kernel `/up` check: **200**, JSON `status=up`. Production
+  journal mode is `wal`. Config/event/route/view cache compilation, shell/PHP
+  syntax, Composer validation, and logrotate debug validation passed.
+- Direct Logalyzer smoke delivery could not be verified: cURL errno **6** (DNS
+  resolution failure) in this execution environment. Mocked delivery verifies
+  grouping, severity filtering, and local log preservation during transport
+  failure. No live delivery success is claimed.
+- Host cron/logrotate activation still requires the administrator installer;
+  no `/etc` files or service state were changed by this session. Off-server
+  backups and external uptime alerts remain intentionally unconfigured.
+- Dependency advisories could not be refreshed with network access disabled.
+  Online auditing is included in CI; the offline install is not an audit.
+
+## Original application verification
+
 - Laravel 13.25.0 installed using the existing Composer cache; `composer.lock` pins installed versions. Direct Packagist access was unavailable.
 - `composer validate --no-check-publish`: passed.
 - `composer test`: 9 tests, 79 assertions passed, using in-memory SQLite.

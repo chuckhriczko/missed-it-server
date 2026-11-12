@@ -12,8 +12,21 @@
         "php": "^8.3",
         "laravel/framework": "^13.17",
         "laravel/sanctum": "^4.3",
-        "laravel/tinker": "^3.0"
+        "laravel/tinker": "^3.0",
+        "logalyzer/logalyzer-php": "^1.0"
     },
+    "repositories": [
+        {
+            "type": "path",
+            "url": "packages/logalyzer-sdk",
+            "options": {
+                "symlink": false,
+                "versions": {
+                    "logalyzer/logalyzer-php": "1.0.0"
+                }
+            }
+        }
+    ],
     "require-dev": {
         "fakerphp/faker": "^1.23",
         "laravel/pail": "^1.2.5",

@@ -1,6 +1,7 @@
 <?php
 use App\Http\Controllers\Api\PlayerController;
 use App\Http\Controllers\Api\PuzzleController;
+use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\TokenController;
 use App\Http\Controllers\PuzzleController as WebPuzzleController;
 use Illuminate\Support\Facades\Route;
@@ -9,6 +10,7 @@ use Laravel\Sanctum\Http\Middleware\CheckAbilities;
 Route::prefix('v1')->name('api.')->group(function () {
     Route::post('/tokens', [TokenController::class, 'store'])->middleware('throttle:api-login')->name('tokens.store');
     Route::post('/players', [PlayerController::class, 'store'])->middleware('throttle:player-create')->name('players.store');
+    Route::post('/reports', [ReportController::class, 'store'])->middleware('throttle:game-reports')->name('reports.store');
     Route::middleware('throttle:api-public')->group(function () {
         Route::get('/puzzles', [PuzzleController::class, 'index'])->name('puzzles.index');
         Route::get('/puzzles/{puzzle}', [PuzzleController::class, 'show'])->name('puzzles.show');
