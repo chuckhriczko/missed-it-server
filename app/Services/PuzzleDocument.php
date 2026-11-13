@@ -13,7 +13,7 @@ class PuzzleDocument {
         catch (\JsonException $e) { $fail('This is not valid puzzle JSON: '.$e->getMessage()); }
         if (! $object instanceof \stdClass) $fail('A puzzle must be a JSON object. Export it from Puzzle Studio → Library → Share JSON.');
         $d = json_decode($raw, true);
-        $allowed = explode(' ', 'BuiltIn UniqueGoal Version Id Title Brief StarScore SuggestedSection SuggestedLevel Pegs Home Portals RequiredFields RequiredGrazes FinishGrazes RequiredGates RequiredBumpers ArenaHeight LaunchOrigin Boss Gift Banks BankAfterStep Clear Surfaces LinkedTargets Rivers RequiredRivers ThreeStarScore ClockStart');
+        $allowed = explode(' ', 'BuiltIn UniqueGoal Version Id Title Brief StarScore SuggestedSection SuggestedLevel Pegs Home Portals RequiredFields RequiredGrazes FinishGrazes RequiredGates RequiredBumpers ArenaHeight LaunchOrigin Boss Gift Banks BankAfterStep Clear Surfaces LinkedTargets Rivers RequiredRivers ThreeStarScore ClockStart Switches');
         if (array_diff(array_keys($d), $allowed)) $fail('Unrecognized puzzle properties. Use a version 1 Puzzle Studio export, rather than a campaign or Room Workshop file.');
         $vector = ['required', 'array:X,Y'];
         $number = ['required', 'numeric', 'between:-10000,10000'];
@@ -56,9 +56,17 @@ class PuzzleDocument {
             'Portals.*' => ['required','array:Id,A,B'],
             'Portals.*.Id' => ['required','integer','min:0','distinct:strict'],
             'Surfaces' => ['nullable','array','list','max:32'],
-            'Surfaces.*' => ['required','array:Id,A,B,Kind,Thickness,PassingNormal,Current,Swing,Speed'],
+            'Surfaces.*' => ['required','array:Id,A,B,Kind,Thickness,PassingNormal,Current,Swing,Speed,StartsOpen'],
             'Surfaces.*.Id' => ['required','integer','min:0','distinct:strict'],
-            'Surfaces.*.Kind' => ['required',Rule::in(['Wall','Mirror','OneWay','Breakable','Water','Rotating'])],
+            'Surfaces.*.Kind' => ['required',Rule::in(['Wall','Mirror','OneWay','Breakable','Water','Rotating','Door'])],
+            'Surfaces.*.StartsOpen' => ['sometimes','boolean'],
+            // Switches flip gold doors (Surfaces of Kind Door) open or shut when Pip touches them.
+            'Switches' => ['nullable','array','list','max:6'],
+            'Switches.*' => ['required','array:Id,Position,Doors,Radius'],
+            'Switches.*.Id' => ['required','integer','min:0','distinct:strict'],
+            'Switches.*.Doors' => ['required','array','list','min:1','max:32'],
+            'Switches.*.Doors.*' => ['integer','min:0'],
+            'Switches.*.Radius' => ['sometimes','numeric','between:12,30'],
             'Surfaces.*.Thickness' => ['sometimes','numeric','between:0,200'],
             'LinkedTargets' => ['nullable','array','list','max:8'],
             'LinkedTargets.*' => ['required','array:Id,Position,Radius'],
@@ -88,7 +96,7 @@ class PuzzleDocument {
             'Clear.Chain.*' => ['string','max:1000'],
             'Clear.LaunchDelay' => ['nullable','numeric','between:0,86400'],
             'BuiltIn' => ['nullable','array:Room,Title,Fingerprint'],
-            'BuiltIn.Room' => ['required_with:BuiltIn','integer','between:1,60'],
+            'BuiltIn.Room' => ['required_with:BuiltIn','integer','between:1,80'],
             'BuiltIn.Title' => ['required_with:BuiltIn','string','max:100'],
             'BuiltIn.Fingerprint' => ['required_with:BuiltIn','string','size:64'],
             'Boss' => ['nullable','array'], 'Gift' => ['nullable','array'],
@@ -102,7 +110,7 @@ class PuzzleDocument {
             $rules[$path.'.X'] = ['required_with:'.$path,'numeric','between:-10000,10000'];
             $rules[$path.'.Y'] = ['required_with:'.$path,'numeric','between:-10000,10000'];
         }
-        foreach (['Surfaces.*.A','Surfaces.*.B','LinkedTargets.*.Position','Rivers.*.Points.*','Portals.*.A.Center','Portals.*.B.Center'] as $path) {
+        foreach (['Surfaces.*.A','Surfaces.*.B','LinkedTargets.*.Position','Rivers.*.Points.*','Switches.*.Position','Portals.*.A.Center','Portals.*.B.Center'] as $path) {
             $rules[$path] = $vector;
             $rules[$path.'.X'] = $number; $rules[$path.'.Y'] = $number;
         }
@@ -134,6 +142,9 @@ class PuzzleDocument {
                 if (!is_int($id) || !in_array($id, array_column($d['Pegs'],'Id'), true)) $fail("$key references a missing peg.");
             }
         }
+        foreach ($d['Surfaces'] ?? [] as $surface) if (array_key_exists('StartsOpen', $surface) && !is_bool($surface['StartsOpen'])) $fail('StartsOpen must be true or false.');
+        $doors = array_column(array_filter($d['Surfaces'] ?? [], fn ($s) => $s['Kind'] === 'Door'), 'Id');
+        foreach ($d['Switches'] ?? [] as $switch) foreach ($switch['Doors'] as $id) if (!is_int($id) || !in_array($id, $doors, true)) $fail('Switches must name gold doors on the board.');
         foreach (['RequiredGates' => 'Portals','RequiredRivers' => 'Rivers'] as $key => $collection) {
             foreach ($d[$key] ?? [] as $id) if (!is_int($id) || !in_array($id, array_column($d[$collection] ?? [],'Id'), true)) $fail("$key references a missing mechanism.");
         }
@@ -141,7 +152,7 @@ class PuzzleDocument {
     }
     public function mechanics(array $d): array {
         $kinds = array_values(array_unique(array_filter(array_column($d['Pegs'], 'Kind'), fn ($kind) => $kind !== 'Neutral')));
-        foreach (['Portals'=>'Portals','Surfaces'=>'Surfaces','Rivers'=>'Rivers','LinkedTargets'=>'Blossoms'] as $key=>$label) if (!empty($d[$key])) $kinds[] = $label;
+        foreach (['Portals'=>'Portals','Surfaces'=>'Surfaces','Rivers'=>'Rivers','LinkedTargets'=>'Blossoms','Switches'=>'Switches'] as $key=>$label) if (!empty($d[$key])) $kinds[] = $label;
         return $kinds;
     }
 }

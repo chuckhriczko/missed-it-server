@@ -56,6 +56,38 @@ class PuzzleSharingTest extends TestCase {
         $this->post('/puzzles',['puzzle_file'=>UploadedFile::fake()->createWithContent('p.json',$this->raw()),'puzzle_json'=>$this->raw(),'difficulty'=>'gentle'])->assertSessionHasErrors('puzzle_json');
         $this->assertDatabaseCount('puzzles',0);
     }
+    public function test_doors_and_switches_are_accepted_and_checked(): void {
+        // Lock Gardens pieces (game M164): gold doors are Surfaces of Kind Door; switches name the doors they flip.
+        $lock = function (): array {
+            $d = json_decode($this->raw(), true);
+            $d['Surfaces'] = [
+                ['Id'=>1,'A'=>['X'=>380,'Y'=>110],'B'=>['X'=>380,'Y'=>340],'Kind'=>'Wall','Thickness'=>12],
+                ['Id'=>10,'A'=>['X'=>380,'Y'=>340],'B'=>['X'=>580,'Y'=>340],'Kind'=>'Door','Thickness'=>12],
+                ['Id'=>11,'A'=>['X'=>120,'Y'=>620],'B'=>['X'=>260,'Y'=>620],'Kind'=>'Door','Thickness'=>12,'StartsOpen'=>true],
+            ];
+            $d['Switches'] = [['Id'=>1,'Position'=>['X'=>400,'Y'=>640],'Doors'=>[10,11],'Radius'=>14]];
+            return $d;
+        };
+        $this->actingAs(User::factory()->create());
+        $this->post('/puzzles',['puzzle_json'=>json_encode($lock()),'difficulty'=>'tricky'])->assertRedirect()->assertSessionHasNoErrors();
+        $this->assertContains('Switches', Puzzle::latest('id')->firstOrFail()->mechanics);
+        $this->get('/?mechanic=Switches')->assertOk()->assertSee('Borrow the bend');
+        $bad = [
+            'a switch naming a wall' => fn (&$d) => $d['Switches'][0]['Doors'] = [1],
+            'a switch naming a missing door' => fn (&$d) => $d['Switches'][0]['Doors'] = [99],
+            'a switch naming no door' => fn (&$d) => $d['Switches'][0]['Doors'] = [],
+            'a switch too large' => fn (&$d) => $d['Switches'][0]['Radius'] = 40,
+            'two switches with one id' => fn (&$d) => $d['Switches'][] = $d['Switches'][0],
+            'seven switches' => fn (&$d) => $d['Switches'] = array_map(fn ($i) => ['Id'=>$i,'Position'=>['X'=>100+$i*60,'Y'=>640],'Doors'=>[10]], range(1,7)),
+            'a string door state' => fn (&$d) => $d['Surfaces'][2]['StartsOpen'] = 'yes',
+            'an unknown switch property' => fn (&$d) => $d['Switches'][0]['Colour'] = 'gold',
+        ];
+        foreach ($bad as $why => $break) {
+            $d = $lock(); $break($d);
+            $this->post('/puzzles',['puzzle_json'=>json_encode($d),'difficulty'=>'gentle'])->assertSessionHasErrors('puzzle_json', null, 'default');
+        }
+        $this->assertDatabaseCount('puzzles',1);
+    }
     public function test_search_mechanic_difficulty_sort_and_personal_collection(): void {
         $p=$this->publish();
         $this->get('/?q=Borrow&mechanic=Gravity&difficulty=tricky&sort=popular')->assertOk()->assertSee('Borrow the bend');

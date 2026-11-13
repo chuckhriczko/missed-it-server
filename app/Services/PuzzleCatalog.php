@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Validation\Rule;
 class PuzzleCatalog
 {
-    public const MECHANICS = ['Gravity', 'Repulsor', 'Accelerator', 'Orbiter', 'Capture', 'Bumper', 'Portals', 'Surfaces', 'Rivers', 'Blossoms'];
+    public const MECHANICS = ['Gravity', 'Repulsor', 'Accelerator', 'Orbiter', 'Capture', 'Bumper', 'Portals', 'Surfaces', 'Rivers', 'Blossoms', 'Switches'];
     public static function rules(): array
     {
         return [

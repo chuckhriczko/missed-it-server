@@ -12,7 +12,10 @@
         <polyline points="@foreach($river['Points'] as $p){{ $p['X'] }},{{ $p['Y'] }} @endforeach" fill="none" stroke="#8dc7cf" stroke-width="{{ $river['Width'] ?? 44 }}" stroke-linecap="round" stroke-linejoin="round" opacity=".65"/>
     @endforeach
     @foreach($board['Surfaces'] ?? [] as $surface)
-        <line x1="{{ $surface['A']['X'] }}" y1="{{ $surface['A']['Y'] }}" x2="{{ $surface['B']['X'] }}" y2="{{ $surface['B']['Y'] }}" stroke="{{ ['Mirror'=>'#93a9c3','Water'=>'#8dc7cf','Breakable'=>'#af8c69'][$surface['Kind']] ?? '#7f8a6b' }}" stroke-width="{{ $surface['Thickness'] ?? 12 }}" stroke-linecap="round"/>
+        <line x1="{{ $surface['A']['X'] }}" y1="{{ $surface['A']['Y'] }}" x2="{{ $surface['B']['X'] }}" y2="{{ $surface['B']['Y'] }}" stroke="{{ ['Mirror'=>'#93a9c3','Water'=>'#8dc7cf','Breakable'=>'#af8c69','Door'=>'#d4a933'][$surface['Kind']] ?? '#7f8a6b' }}" stroke-width="{{ $surface['Thickness'] ?? 12 }}" stroke-linecap="round" @if($surface['Kind'] === 'Door' && ($surface['StartsOpen'] ?? false)) stroke-dasharray="8 10" opacity=".6" @endif/>
+    @endforeach
+    @foreach($board['Switches'] ?? [] as $switch)
+        <circle cx="{{ $switch['Position']['X'] }}" cy="{{ $switch['Position']['Y'] }}" r="{{ $switch['Radius'] ?? 18 }}" fill="#3d3552" stroke="#d4a933" stroke-width="4"/>
     @endforeach
     @foreach($board['Portals'] as $portal) @foreach(['A','B'] as $side)
         <circle cx="{{ $portal[$side]['Center']['X'] }}" cy="{{ $portal[$side]['Center']['Y'] }}" r="{{ $portal[$side]['Radius'] }}" fill="#eee4f5" stroke="#a48bb9" stroke-width="6"/>
