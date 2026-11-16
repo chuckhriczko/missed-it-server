@@ -15,7 +15,8 @@
         <line x1="{{ $surface['A']['X'] }}" y1="{{ $surface['A']['Y'] }}" x2="{{ $surface['B']['X'] }}" y2="{{ $surface['B']['Y'] }}" stroke="{{ ['Mirror'=>'#93a9c3','Water'=>'#8dc7cf','Breakable'=>'#af8c69','Door'=>'#d4a933'][$surface['Kind']] ?? '#7f8a6b' }}" stroke-width="{{ $surface['Thickness'] ?? 12 }}" stroke-linecap="round" @if($surface['Kind'] === 'Door' && ($surface['StartsOpen'] ?? false)) stroke-dasharray="8 10" opacity=".6" @endif/>
     @endforeach
     @foreach($board['Switches'] ?? [] as $switch)
-        <circle cx="{{ $switch['Position']['X'] }}" cy="{{ $switch['Position']['Y'] }}" r="{{ $switch['Radius'] ?? 18 }}" fill="#3d3552" stroke="#d4a933" stroke-width="4"/>
+        <circle cx="{{ $switch['Position']['X'] }}" cy="{{ $switch['Position']['Y'] }}" r="{{ $switch['Radius'] ?? 18 }}" fill="#3d3552" stroke="#d4a933" stroke-width="4" @if(($switch['Kind'] ?? 'Toggle') === 'Timer') stroke-dasharray="6 4" @endif/>
+        @if(($switch['Kind'] ?? 'Toggle') === 'Button')<circle cx="{{ $switch['Position']['X'] }}" cy="{{ $switch['Position']['Y'] }}" r="{{ ($switch['Radius'] ?? 18) * .6 }}" fill="#d4a933"/>@endif
     @endforeach
     @foreach($board['Portals'] as $portal) @foreach(['A','B'] as $side)
         <circle cx="{{ $portal[$side]['Center']['X'] }}" cy="{{ $portal[$side]['Center']['Y'] }}" r="{{ $portal[$side]['Radius'] }}" fill="#eee4f5" stroke="#a48bb9" stroke-width="6"/>

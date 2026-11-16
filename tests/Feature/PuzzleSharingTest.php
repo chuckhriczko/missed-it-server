@@ -88,6 +88,36 @@ class PuzzleSharingTest extends TestCase {
         }
         $this->assertDatabaseCount('puzzles',1);
     }
+    // Game M169: buttons only open; timers flip their doors back after Seconds. A plain switch leaves both out.
+    public function test_buttons_and_timers_are_accepted_and_checked(): void {
+        $kinds = function (): array {
+            $d = json_decode($this->raw(), true);
+            $d['Surfaces'] = [
+                ['Id'=>1,'A'=>['X'=>380,'Y'=>110],'B'=>['X'=>380,'Y'=>340],'Kind'=>'Wall','Thickness'=>12],
+                ['Id'=>10,'A'=>['X'=>380,'Y'=>340],'B'=>['X'=>580,'Y'=>340],'Kind'=>'Door','Thickness'=>12],
+            ];
+            $d['Switches'] = [
+                ['Id'=>1,'Position'=>['X'=>400,'Y'=>640],'Doors'=>[10],'Radius'=>20,'Kind'=>'Button'],
+                ['Id'=>2,'Position'=>['X'=>200,'Y'=>640],'Doors'=>[10],'Radius'=>20,'Kind'=>'Timer','Seconds'=>2.5],
+            ];
+            return $d;
+        };
+        $this->actingAs(User::factory()->create());
+        $this->post('/puzzles',['puzzle_json'=>json_encode($kinds()),'difficulty'=>'tricky'])->assertRedirect()->assertSessionHasNoErrors();
+        $this->assertContains('Switches', Puzzle::latest('id')->firstOrFail()->mechanics);
+        $bad = [
+            'an unknown switch kind' => fn (&$d) => $d['Switches'][0]['Kind'] = 'Lever',
+            'a timer without seconds' => fn (&$d) => $d['Switches'][1]['Seconds'] = 0,
+            'a timer too long' => fn (&$d) => $d['Switches'][1]['Seconds'] = 12,
+            'seconds on a button' => fn (&$d) => $d['Switches'][0]['Seconds'] = 2,
+            'seconds as a string' => fn (&$d) => $d['Switches'][1]['Seconds'] = '2.5',
+        ];
+        foreach ($bad as $why => $break) {
+            $d = $kinds(); $break($d);
+            $this->post('/puzzles',['puzzle_json'=>json_encode($d),'difficulty'=>'gentle'])->assertSessionHasErrors('puzzle_json', null, 'default');
+        }
+        $this->assertDatabaseCount('puzzles',1);
+    }
     public function test_search_mechanic_difficulty_sort_and_personal_collection(): void {
         $p=$this->publish();
         $this->get('/?q=Borrow&mechanic=Gravity&difficulty=tricky&sort=popular')->assertOk()->assertSee('Borrow the bend');

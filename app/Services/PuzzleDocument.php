@@ -62,11 +62,14 @@ class PuzzleDocument {
             'Surfaces.*.StartsOpen' => ['sometimes','boolean'],
             // Switches flip gold doors (Surfaces of Kind Door) open or shut when Pip touches them.
             'Switches' => ['nullable','array','list','max:6'],
-            'Switches.*' => ['required','array:Id,Position,Doors,Radius'],
+            // Game M169: Kind Button only opens; Kind Timer flips its doors back after Seconds. Both are left out for a plain switch.
+            'Switches.*' => ['required','array:Id,Position,Doors,Radius,Kind,Seconds'],
             'Switches.*.Id' => ['required','integer','min:0','distinct:strict'],
             'Switches.*.Doors' => ['required','array','list','min:1','max:32'],
             'Switches.*.Doors.*' => ['integer','min:0'],
             'Switches.*.Radius' => ['sometimes','numeric','between:12,30'],
+            'Switches.*.Kind' => ['sometimes',Rule::in(['Toggle','Button','Timer'])],
+            'Switches.*.Seconds' => ['sometimes','numeric','between:0,10'],
             'Surfaces.*.Thickness' => ['sometimes','numeric','between:0,200'],
             'LinkedTargets' => ['nullable','array','list','max:8'],
             'LinkedTargets.*' => ['required','array:Id,Position,Radius'],
@@ -125,7 +128,7 @@ class PuzzleDocument {
         $validator = Validator::make($d, $rules);
         if ($validator->fails()) $fail($validator->errors()->first());
         // JSON numeric strings and booleans are not numbers in System.Text.Json.
-        $numericKeys = ['X','Y','Radius','Field','Strength','OrbitRadius','OrbitSpeed','Phase','Drift','Breath','Width','Speed','ExitSpeed','Facing','Thickness','Swing','Angle','AimAngle','LaunchDelay','ClockStart','ArenaHeight'];
+        $numericKeys = ['X','Y','Radius','Field','Strength','OrbitRadius','OrbitSpeed','Phase','Drift','Breath','Width','Speed','ExitSpeed','Facing','Thickness','Seconds','Swing','Angle','AimAngle','LaunchDelay','ClockStart','ArenaHeight'];
         $integerKeys = ['Version','StarScore','ThreeStarScore','Banks','BankAfterStep','UniqueGoal','SuggestedLevel','Tick','PegId','Score','NearbyClears','Room'];
         $walk = function ($value, bool $root = false) use (&$walk, $numericKeys, $integerKeys, $fail) {
             foreach ($value as $key => $item) {
@@ -145,6 +148,10 @@ class PuzzleDocument {
         foreach ($d['Surfaces'] ?? [] as $surface) if (array_key_exists('StartsOpen', $surface) && !is_bool($surface['StartsOpen'])) $fail('StartsOpen must be true or false.');
         $doors = array_column(array_filter($d['Surfaces'] ?? [], fn ($s) => $s['Kind'] === 'Door'), 'Id');
         foreach ($d['Switches'] ?? [] as $switch) foreach ($switch['Doors'] as $id) if (!is_int($id) || !in_array($id, $doors, true)) $fail('Switches must name gold doors on the board.');
+        foreach ($d['Switches'] ?? [] as $switch) {
+            $seconds = $switch['Seconds'] ?? 0;
+            if (($switch['Kind'] ?? 'Toggle') === 'Timer' ? !(is_numeric($seconds) && $seconds >= 0.5 && $seconds <= 10) : $seconds != 0) $fail('A timer runs for 0.5 to 10 seconds, and only timers have seconds.');
+        }
         foreach (['RequiredGates' => 'Portals','RequiredRivers' => 'Rivers'] as $key => $collection) {
             foreach ($d[$key] ?? [] as $id) if (!is_int($id) || !in_array($id, array_column($d[$collection] ?? [],'Id'), true)) $fail("$key references a missing mechanism.");
         }
